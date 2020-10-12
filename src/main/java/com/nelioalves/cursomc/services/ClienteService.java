@@ -1,8 +1,12 @@
 package com.nelioalves.cursomc.services;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+import com.nelioalves.cursomc.domain.enums.Perfil;
+import com.nelioalves.cursomc.security.UserSS;
+import com.nelioalves.cursomc.services.exceptions.AuthorizationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -36,6 +40,10 @@ public class ClienteService {
 	private BCryptPasswordEncoder pe;
 	
 	public Cliente find(Integer id) {
+		UserSS user =UserService.authenticated();
+		if(Objects.isNull(user) || !user.hasRole(Perfil.ADMIN) && !id.equals(user.getId())){
+			throw new AuthorizationException("Acesso Negado");
+		}
 		Optional<Cliente> obj = clienteRepository.findById(id);
 		return obj.orElseThrow(() -> new ObjectNotFoundException(
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Cliente.class.getName()));
